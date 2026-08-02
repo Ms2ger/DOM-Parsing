@@ -426,18 +426,23 @@ dl.domintro::before {
 
 <!--
   Summary of the namespace handling, ignoring edge cases with XML and XMLNS namespaces:
-  1.  If |node| is in (the inherited) |namespace|, drop any prefix and keep any xmlns attribute.
-      (TODO: verify the attribute handling)
+  1.  If |node| is in (the inherited) |namespace|, drop any prefix and any xmlns attribute.
       Test: <a xmlns=foo xmlns:foo=foo><foo:b/></a>
       Test: <a xmlns=foo><foo:b xmlns:foo=foo/></a>
       Test: <a xmlns=foo><b/></a>; b.setAttributeNS(xmlns, "xmlns", "bar");
+      Test: <a xmlns=XML><b/></a>
+      Test: <a xmlns=XML><b xmlns=XML/></a>
+      Test: <foo:a xmlns:foo=XML><foo:b/></foo:a>
   2.  If |node| has a prefix, and this prefix maps to |node|'s namespace, use that as the prefix.
       Test: <a xmlns=a xmlns:foo1=foo xmlns:foo2="foo"><b/></a>
       Test: <a xmlns=a xmlns:foo1=foo xmlns:foo2="foo"><foo1:b/></a>
       Test: <a xmlns=a xmlns:foo1=foo xmlns:foo2="foo"><foo2:b/></a>
-  3.  If |node| has a prefix, and this prefix *does not map* to |node|'s namespace, but another
-      prefix is declared in |prefix map| that *does* map to |node|'s namespace, use the
-      most-recently such declared prefix.
+  3.  If |node| has a prefix, and this prefix *does not map* to |node|'s namespace, or |node| does
+      not have a prefix, but another prefix is declared in |prefix map| that *does* map to |node|'s
+      namespace, use the most-recently such declared prefix.
+      Test: <a xmlns=a xmlns:foo1=foo xmlns:foo2="foo"><b xmlns=foo/></a>; (#52)
+      Test: <a xmlns="a" xmlns:foo1="foo" xmlns:foo2="foo"><b xmlns="foo"/></a>;
+        b.setAttribute("xmlns", "bar");
       Test: <a xmlns=a xmlns:foo1=foo xmlns:foo2="foo" xmlns:foo3="foo"><foo3:b/></a>;
         a.setAttributeNS(xmlns, "foo3", "bar")
   4.  If |node| has a prefix, and no prefix exists that maps to |node|'s namespace (in particular
@@ -449,6 +454,10 @@ dl.domintro::before {
       Test: <a xmlns=a />; a.appendChild(document.createElementNS("foo", "foo:b"));
       Test: <a xmlns=a />; b = a.appendChild(document.createElementNS("foo", "foo1:b"));
         b.setAttributeNS(xmlns, "foo1", "bar");
+  5.  If |node| does not have an `xmlns=".."` attribute, add one with |node|'s namespace.
+  6.  If |node| has an `xmlns=".."` attribute that *doesn't match* |node|'s namespace, replace it.
+  7.  If |node| has an `xmlns=".."` attribute that *matches* |node|'s namespace, all is fine and
+      we need no prefix.
 -->
 
   <ol>
@@ -491,36 +500,47 @@ dl.domintro::before {
         return the value of a default namespace attribute if one exists.
         Otherwise it returns null.</p>
 
-    <li>Let <var>inherited ns</var> be <var>namespace</var>.
+    <li>
+      <p>Let <var>inherited ns</var> be <var>namespace</var>.
+
+      <p class="note"><var>inherited ns</var> will be passed down as the namespace argument
+        when serializing <var>node</var>'s [=tree/children=].
 
     <li>Let <var>ns</var> be <var>node</var>'s [=Element/namespace=].
 
+    <!-- TODO: factor out the computation of |qualified name| into a separate algorithm -->
+
     <li>
       <p>If <var>inherited ns</var> is equal to <var>ns</var>, then:
+
+      <p class="note"><var>node</var> is in the current default namespace. The steps below
+        serialize <var>node</var> without a prefix (even if it had one), and drop any default
+        namespace declaration. An exception is made if <var>node</var> is in the [=XML namespace=],
+        in which case the "`xml:`" prefix is used; this prefix does not need to be declared and no
+        effort is made to declare it.
+
       <ol>
         <li>If <var>local default namespace</var> is not null, then set
           <var>ignore namespace definition attribute</var> to true.
 
-        <li>If <var>ns</var> is the <a>XML namespace</a>, then append to <var>qualified name</var>
-          the concatenation of the string "<code>xml:</code>" and <var>node</var>'s
-          [=Element/local name=].
+        <li>If <var>ns</var> is the <a>XML namespace</a>, then append the concatenation of the
+          string "<code>xml:</code>" and <var>node</var>'s [=Element/local name=] to
+          <var>qualified name</var>.
 
-        <li>Otherwise, append to <var>qualified name</var> the value of <var>node</var>'s
-          [=Element/local name=]. <span class=note><var>node</var>'s [=Element/namespace prefix=],
-          if any, is dropped.</span>
+        <li>Otherwise, append <var>node</var>'s [=Element/local name=] to <var>qualified name</var>.
 
         <li>Append <var>qualified name</var> to <var>markup</var>.
       </ol>
 
     <li>
       <p>Otherwise:
+
       <p class="note"><var>inherited ns</var> is not equal to <var>ns</var>; <var>node</var>'s
-        own [=Element/namespace=] is different from the context namespace of its parent.
-      <!-- The serialization algorithm must differentiate this node's namespace from it's parent's
-      default namespace. There are two ways to do this: (1) [preferred due to assumed minimum length]
-      use a namespace prefix if one is available or (2) use a default namespace declaration. Both
-      cases can run into conflicts with existing attributes on the element and are handled
-      accordingly. -->
+        own [=Element/namespace=] is different from the context namespace.
+        To differentiate <var>node</var>'s namespace from the context namespace, the steps below
+        will use a namespace prefix if one is available; if not, they will use or introduce a
+        default namespace declaration.
+
       <ol>
         <li>Let <var>prefix</var> be <var>node</var>'s [=Element/namespace prefix=].
 
@@ -530,8 +550,8 @@ dl.domintro::before {
             given <var>ns</var>.
 
           <p class=note><var>candidate prefix</var> will be null if no prefix was found that maps
-            to <var>ns</var>. In that case, this algorithm will generate a new `xmlns` attribute
-            and <a>add</a> any new prefix to <var>map</var> below.</p>
+            to <var>ns</var> (not even <var>prefix</var>). In that case, this algorithm will
+            generate a new `xmlns` attribute and <a>add</a> any new prefix to <var>map</var> below.
 
         <li>If <var>prefix</var> is "<code>xmlns</code>", then:
         <ol>
@@ -558,6 +578,8 @@ dl.domintro::before {
             <a>retrieving a preferred prefix string</a> algorithm already tried to match the
             existing prefix.</p>
 
+          <div class="issue" data-number="52"></div>
+
           <ol>
             <li>Append to <var>qualified name</var> the concatenation of
               <var>candidate prefix</var>, "<code>:</code>" (U+003A COLON), and <var>node</var>'s
@@ -577,9 +599,6 @@ dl.domintro::before {
 
               <p class="note">It is possible that <var>inherited ns</var> differs from
                 <var>node</var>'s [=Element/namespace=].
-
-              <p class="note"><var>inherited ns</var> will be passed down as the namespace argument
-                 when serializing <var>node</var>'s children.
 
               <p class=note>Any default namespace definitions or namespace prefixes that define the
               <a>XML namespace</a> are omitted when serializing this node's attributes.</p>
@@ -650,60 +669,65 @@ dl.domintro::before {
               </ol>
           </ol>
 
-        <li>------------------------------
+        <li>
+          <p>Otherwise, if <var>local default namespace</var> is null, or
+            <var>local default namespace</var> is not equal to <var>ns</var>, then:
 
-        <li>Otherwise, if <a><var>local default namespace</var></a> is null, or
-        <a><var>local default namespace</var></a> is not null and its value is not equal
-        to <var>ns</var>, then:
-
-        <p class=note>At this point, the namespace for this node still needs to be serialized, but
-        there's no <code>prefix</code> (or <var>candidate prefix</var>) available; the following uses
-        the default namespace declaration to define the namespace—optionally replacing an existing
-        default declaration if present.</p>
-
-        <ol>
-          <li>Set the <a><var>ignore namespace definition attribute</var></a> flag to
-          <code>true</code>.
-
-          <li>Append to <a><var>qualified name</var></a> the value of <var>node</var>'s
-          <code><a>localName</a></code>.
-
-          <li>Let the value of <a><var>inherited ns</var></a> be <var>ns</var>.
-
-          <p class=note>The new default namespace will be used in the serialization to define this
-          <var>node</var>'s namespace and act as the <a>context namespace</a> for its
-          <a>children</a>.</p>
-
-          <li>Append the value of <a><var>qualified name</var></a> to <var>markup</var>.
-
-          <li>Append the following to <var>markup</var>, in the order listed:
-
-          <p class=note>The following serializes the new (or replacement) default namespace
-          definition.</p>
+          <p class=note>At this point, the namespace for this node still needs to be serialized, but
+            there's no prefix (or <var>candidate prefix</var>) available; the following uses
+            the default namespace declaration to define the namespace—optionally replacing an
+            existing default declaration if present.</p>
 
           <ol>
-            <li>"<code> </code>" (U+0020 SPACE);
+            <li>Set <var>ignore namespace definition attribute</var> to true.
 
-            <li>The string "<code>xmlns</code>";
+            <li>Append <var>node</var>'s [=Element/local name=] to <var>qualified name</var>.
 
-            <li>"<code>="</code>" (U+003D EQUALS SIGN, U+0022 QUOTATION MARK);
+            <li>Set <var>inherited ns</var> to <var>ns</var>.
 
-            <li>The result of <a>serializing an attribute value</a> given <var>ns</var> and the
-            <a><var>require well-formed</var></a> flag as input;
+            <p class=note>The new default namespace will be used in the serialization to define
+              <var>node</var>'s [=Element/namespace=] and act as the context namespace for its
+              [=tree/children=].</p>
 
-            <li>"<code>"</code>" (U+0022 QUOTATION MARK).
-          </ol>
+            <li>Append <var>qualified name</var> to <var>markup</var>.
+
+            <li>Append the following to <var>markup</var>, in the order listed:
+
+            <p class=note>The following serializes the new (or replacement) default namespace
+              definition.</p>
+
+            <ol>
+              <li>"<code> </code>" (U+0020 SPACE);
+
+              <li>The string "<code>xmlns</code>";
+
+              <li>"<code>="</code>" (U+003D EQUALS SIGN, U+0022 QUOTATION MARK);
+
+              <li>The result of <a>serializing an attribute value</a> given <var>ns</var> and
+                <var>require well-formed</var>;
+
+              <li>"<code>"</code>" (U+0022 QUOTATION MARK).
+            </ol>
         </ol>
+
         <!-- Finally, regardless of prefix, the node has a local default namespace that matches 'ns'.
         So, we'll just use that and drop the prefix -->
-        <li>Otherwise, the <var>node</var> has a <a><var>local default namespace</var></a> that matches
-        <var>ns</var>. Append to <a><var>qualified name</var></a> the value of <var>node</var>'s
-        <code><a>localName</a></code>, let the value of <a><var>inherited ns</var></a> be <var>ns</var>,
-        and append the value of <a><var>qualified name</var></a> to <var>markup</var>.
+        <li>
+          <p>Otherwise:
+
+          <p class="note"><var>local default namespace</var> is equal to <var>ns</var>.
+
+          <ol>
+            <li>Append <var>node</var>'s [=Element/local name=] to <var>qualified name</var> .
+
+            <li>Set <var>inherited ns</var> to <var>ns</var>.
+
+            <li>Append <var>qualified name</var> to <var>markup</var>.
+          </ol>
 
         <p class=note>All of the combinations where <var>ns</var> is not equal to
-        <a><var>inherited ns</var></a> are handled above such that <var>node</var> will be serialized
-        preserving its original <code><a data-lt="element namespaceURI">namespaceURI</a></code>.</p>
+          <var>inherited ns</var> are handled above such that <var>node</var> will be serialized
+          preserving its original [=Element/namespace=].</p>
       </ol>
 
     <li>Append to <var>markup</var> the result of the
