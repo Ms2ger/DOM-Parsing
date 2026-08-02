@@ -437,6 +437,7 @@ dl.domintro::before {
       Test: <a xmlns=a xmlns:foo1=foo xmlns:foo2="foo"><b/></a>
       Test: <a xmlns=a xmlns:foo1=foo xmlns:foo2="foo"><foo1:b/></a>
       Test: <a xmlns=a xmlns:foo1=foo xmlns:foo2="foo"><foo2:b/></a>
+      Test: <a xmlns="a" xmlns:foo1="foo" xmlns:foo2="foo"><foo2:b xmlns="foo"/></a>
   3.  If |node| has a prefix, and this prefix *does not map* to |node|'s namespace, or |node| does
       not have a prefix, but another prefix is declared in |prefix map| that *does* map to |node|'s
       namespace, use the most-recently such declared prefix.
@@ -730,77 +731,68 @@ dl.domintro::before {
           preserving its original [=Element/namespace=].</p>
       </ol>
 
-    <li>Append to <var>markup</var> the result of the
-    <a data-lt="XML serialization of the attributes">XML serialization of <var>node</var>'s attributes</a>
-    given <var>map</var>, <a><var>prefix index</var></a>, <a><var>local prefixes map</var></a>,
-    <a><var>ignore namespace definition attribute</var></a> flag, and
-    <a><var>require well-formed</var></a> flag.
+    <li>Append to <var>markup</var> the result of the [=XML serialization of the attributes=] of
+      <var>node</var> given <var>map</var>, <var>prefix index</var>, <var>local prefixes map</var>,
+      <var>ignore namespace definition attribute</var>, and <var>require well-formed</var>.
 
-    <li>If <var>ns</var> is the <a>HTML namespace</a>, and the <var>node</var>'s list of
-    <a>children</a> is empty, and the <var>node</var>'s <code><a>localName</a></code> matches any
-    one of the following <a>void elements</a>:
-    "<code>area</code>",
-    "<code>base</code>",
-    "<code>basefont</code>",
-    "<code>bgsound</code>",
-    "<code>br</code>",
-    "<code>col</code>",
-    "<code>embed</code>",
-    "<code>frame</code>",
-    "<code>hr</code>",
-    "<code>img</code>",
-    "<code>input</code>",
-    "<code>keygen</code>",
-    "<code>link</code>",
-    "<code>menuitem</code>",
-    "<code>meta</code>",
-    "<code>param</code>",
-    "<code>source</code>",
-    "<code>track</code>",
-    "<code>wbr</code>";
-    then append the following to <var>markup</var>, in the order listed:
-    <ol>
-      <li>"<code> </code>" (U+0020 SPACE);
+    <li>If <var>ns</var> is the <a>HTML namespace</a>, and <var>node</var>'s [=tree/children=]
+      [=set/is empty=], and <var>node</var>'s [=Element/local name=] is one of the following:
+      "<code>area</code>",
+      "<code>base</code>",
+      "<code>basefont</code>",
+      "<code>bgsound</code>",
+      "<code>br</code>",
+      "<code>col</code>",
+      "<code>embed</code>",
+      "<code>frame</code>",
+      "<code>hr</code>",
+      "<code>img</code>",
+      "<code>input</code>",
+      "<code>keygen</code>",
+      "<code>link</code>",
+      "<code>menuitem</code>",
+      "<code>meta</code>",
+      "<code>param</code>",
+      "<code>source</code>",
+      "<code>track</code>",
+      "<code>wbr</code>";
+      then append "<code> /</code>" (U+0020 SPACE, U+002F SOLIDUS) to <var>markup</var> and set
+      <var>skip end tag</var> to true.
 
-      <li>"<code>/</code>" (U+002F SOLIDUS).
-    </ol>
-    and set the <a><var>skip end tag</var></a> flag to <code>true</code>.
-
-    <li>If <var>ns</var> is not the <a>HTML namespace</a>, and the <var>node</var>'s list of
-    <a>children</a> is empty, then append "<code>/</code>" (U+002F SOLIDUS) to <var>markup</var>
-    and set the <a><var>skip end tag</var></a> flag to <code>true</code>.
+    <li>If <var>ns</var> is not the <a>HTML namespace</a>, and and <var>node</var>'s
+      [=tree/children=] [=set/is empty=], then append "<code>/</code>" (U+002F SOLIDUS) to
+      <var>markup</var> and set <var>skip end tag</var> to true.
 
     <li>Append "<code>&gt;</code>" (U+003E GREATER-THAN SIGN) to <var>markup</var>.
 
-    <li>If the value of <a><var>skip end tag</var></a> is <code>true</code>, then return the value of
-    <var>markup</var> and skip the remaining steps. The <var>node</var> is a leaf-node.
+    <li>If <var>skip end tag</var> is true, then return <var>markup</var>.
 
-    <li>If <var>ns</var> is the <a>HTML namespace</a>, and the <var>node</var>'s
-    <code><a>localName</a></code> matches the string "<code>template</code>", then this is a
-    <code><a>template</a></code> element. Append to <var>markup</var> the result of
-    <a>XML serializing a DocumentFragment node</a> given the <a>template</a> element's
-    <a>template contents</a> (a <code><a>DocumentFragment</a></code>), providing
-    <a><var>inherited ns</var></a>, <var>map</var>, <a><var>prefix index</var></a>, and the
-    <a><var>require well-formed</var></a> flag.
+    <li>If <var>ns</var> is the <a>HTML namespace</a>, and <var>node</var>'s [=Element/local name=]
+      is "<code>template</code>" (this is a [^template^] element), append to <var>markup</var> the
+      result of <a>XML serializing a DocumentFragment node</a> given |node|'s
+      <a>template contents</a> (a {{DocumentFragment}}), providing <var>inherited ns</var>,
+      <var>map</var>, <var>prefix index</var>, and <var>require well-formed</var>.
 
-    <p class=note>This allows <a>template content</a> to round-trip , given the rules for
+    <p class=note>This allows <a>template contents</a> to round-trip, given the rules for
     <a>parsing XHTML documents</a>.</p>
 
-    <li>Otherwise, append to <var>markup</var> the result of running the
-    <a>XML serialization algorithm</a> on each of <var>node</var>'s <a>children</a>, in
-    <a>tree order</a>, providing <a><var>inherited ns</var></a>, <var>map</var>,
-    <a><var>prefix index</var></a>, and the <a><var>require well-formed</var></a> flag.
-
+    <li>
+      <p>Otherwise, [=set/for each=] <var>child</var> of <var>node</var>'s [=tree/children=]:
+      <ol>
+        <li>Append to <var>markup</var> the result of running the <a>XML serialization algorithm</a>
+          on |child|, providing <var>inherited ns</var>, <var>map</var>, <var>prefix index</var>,
+          and <var>require well-formed</var>.
+      </ol>
     <li>Append the following to <var>markup</var>, in the order listed:
     <ol>
       <li>"<code>&lt;/</code>" (U+003C LESS-THAN SIGN, U+002F SOLIDUS);
 
-      <li>The value of <a><var>qualified name</var></a>;
+      <li><var>qualified name</var>;
 
       <li>"<code>&gt;</code>" (U+003E GREATER-THAN SIGN).
     </ol>
 
-    <li>Return the value of <var>markup</var>.
+    <li>Return <var>markup</var>.
   </ol>
 
 <section><h2>Recording the namespace</h2>
@@ -1439,13 +1431,7 @@ dl.domintro::before {
         <dfn><a href="https://www.w3.org/TR/html5/single-page.html#parsing-xhtml-documents">parsing XHTML documents</a></dfn>;
         <dfn><a href="https://www.w3.org/TR/html5/single-page.html#xml-parser">XML parser</a></dfn>;
     <li>A document <dfn><a href="https://www.w3.org/TR/html5/single-page.html#location">location</a></dfn>
-    <li>The following elements:
-        <dfn><a href="https://www.w3.org/TR/html5/single-page.html#meta">meta</a></dfn>,
-        <dfn><a href="https://www.w3.org/TR/html5/single-page.html#the-noscript-element">noscript</a></dfn>,
-        <dfn><a href="https://www.w3.org/TR/html5/single-page.html#script">script</a></dfn> and
-        <dfn><a href="https://www.w3.org/TR/html5/single-page.html#the-template-element">template</a></dfn>
-    <li><dfn><a href="https://www.w3.org/TR/html5/single-page.html#void-elements">void elements</a></dfn>
-    <li>The <a>template</a>'s <dfn data-lt="template content"><a href="https://www.w3.org/TR/html5/single-page.html#template-contents">template contents</a></dfn>
+    <li>The [^template^]'s <dfn data-lt="template content"><a href="https://www.w3.org/TR/html5/single-page.html#template-contents">template contents</a></dfn>
     <li>The <dfn data-lt="CEReactions"><a href="https://www.w3.org/TR/html5/single-page.html#cereactios">[CEReactions]</a></dfn> IDL <a>extended attribute</a>
     <li>The <dfn><a href="https://html.spec.whatwg.org/dynamic-markup-insertion.html#dom-element-innerhtml">innerHTML</a></dfn> property;
     <li>The <dfn><a href="https://html.spec.whatwg.org/dynamic-markup-insertion.html#dom-element-outerhtml">outerHTML</a></dfn> property;
