@@ -416,7 +416,7 @@ dl.domintro::before {
 <section><h2>XML serializing an Element node</h2>
 
   <p>The algorithm for <dfn>XML serializing an Element node</dfn>, given
-    a {{Node}} |node:Node|,
+    an {{Element}} |node:Element|,
     a string |namespace:string|,
     a [=namespace prefix map=] |prefix map:namespace prefix map|,
     a mutable reference to an integer |prefix index:mutable reference to an integer|,
@@ -783,6 +783,7 @@ dl.domintro::before {
           on |child|, providing <var>inherited ns</var>, <var>map</var>, <var>prefix index</var>,
           and <var>require well-formed</var>.
       </ol>
+
     <li>Append the following to <var>markup</var>, in the order listed:
     <ol>
       <li>"<code>&lt;/</code>" (U+003C LESS-THAN SIGN, U+002F SOLIDUS);
@@ -1175,49 +1176,67 @@ dl.domintro::before {
 
 </section><!-- XML serializing an Element node -->
 
-<section><h2><dfn>XML serializing a Document node</dfn></h2>
+<section><h2>XML serializing a Document node</h2>
 
-  The algorithm for <a>producing an XML serialization of a DOM node</a> of type <a>Document</a> is
-  as follows:
+  <p>The algorithm for <dfn>XML serializing a Document node</dfn>, given
+    a {{Document}} |node:Document|,
+    a string |namespace:string|,
+    a [=namespace prefix map=] |prefix map:namespace prefix map|,
+    a mutable reference to an integer |prefix index:mutable reference to an integer|,
+    and
+    a boolean <var>require well-formed</var>,
+    must run the following steps:
 
-  <p>If the <a><var>require well-formed</var></a> flag is set (its value is <code>true</code>), and this
-  <var>node</var> has no <code><a>documentElement</a></code> (the
-  <code><a>documentElement</a></code> attribute's value is <code>null</code>), then
-  <a>throw an exception</a>; the serialization of this <var>node</var> would not be a well-formed
-  document.
-
-  <p>Otherwise, run the following steps:
   <ol>
-    <li>Let <var>serialized document</var> be an empty string.
+    <li>If <var>require well-formed</var> is true, and <var>node</var>'s [=document element=] is
+      null, then <a>throw an exception</a>.
+      <span class="note">The serialization of <var>node</var> would not be well-formed.</span>
 
-    <li>For each <a>child</a> <var>child</var> of <var>node</var>, in <a>tree order</a>, run the
-    <a>XML serialization algorithm</a> on the <var>child</var> passing along the provided arguments,
-    and append the result to <var>serialized document</var>.
+    <li>
+      <p>Otherwise, run the following steps:
+      <ol>
+        <li>Let <var>serialized document</var> be the empty string.
 
-    <p class=note>This will serialize any number of <a>ProcessingInstruction</a> and <a>Comment</a>
-    nodes both before and after the <a>Document</a>'s <a>documentElement</a> node, including
-    at most one <a>DocumentType</a> node. (<a>Text</a> nodes are not allowed as children of the
-    <a>Document</a>.)</p>
+        <li>
+          <p>[=set/For each=] <var>child</var> of <var>node</var>'s [=tree/children=]:
+          <ol>
+            <li>Append to <var>serialized document</var> the result of running the
+              <a>XML serialization algorithm</a> on |child|, providing <var>inherited ns</var>,
+              <var>map</var>, <var>prefix index</var>, and <var>require well-formed</var>.
+          </ol>
 
-    <li>Return the value of <var>serialized document</var>.
+          <p class=note>This will serialize any number of {{ProcessingInstruction}} and {{Comment}}
+            nodes both before and after the [=document element=], as well as at most one
+            {{DocumentType}} node. ({{Text}} nodes are not allowed as children of a {{Document}}.)
+
+        <li>Return <var>serialized document</var>.
+      </ol>
   </ol>
 
 </section><!-- XML serializing a Document node -->
 
-<section><h2><dfn>XML serializing a Comment node</dfn></h2>
+<section><h2>XML serializing a Comment node</h2>
 
-  The algorithm for <a>producing an XML serialization of a DOM node</a> of type <a>Comment</a> is as
-  follows:
+  <p>The algorithm for <dfn>XML serializing a Comment node</dfn>, given
+    a {{Comment}} |node:Comment|,
+    a string |namespace:string|,
+    a [=namespace prefix map=] |prefix map:namespace prefix map|,
+    a mutable reference to an integer |prefix index:mutable reference to an integer|,
+    and
+    a boolean <var>require well-formed</var>,
+    must run the following steps:
 
-  <p>If the <a><var>require well-formed</var></a> flag is set (its value is <code>true</code>), and
-  <var>node</var>'s <code><a>data</a></code> contains characters that are not matched by the XML
-  <a>Char</a> production or contains "<code>--</code>" (two adjacent U+002D HYPHEN-MINUS
-  characters) or that ends with a "<code>-</code>" (U+002D HYPHEN-MINUS) character, then
-  <a>throw an exception</a>; the serialization of this <var>node</var>'s <code><a>data</a></code>
-  would not be well-formed.
+  <ol>
+    <li>If <var>require well-formed</var> is true, and <var>node</var>'s [=CharacterData/data=]
+      contains characters that are not matched by the XML <a>Char</a> production, or
+      contains "<code>--</code>" (two adjacent U+002D HYPHEN-MINUS characters), or
+      ends with a "<code>-</code>" (U+002D HYPHEN-MINUS) character,
+      then <a>throw an exception</a>.
+      <span class="note">The serialization of <var>node</var> would not be well-formed.</span>
 
-  <p>Otherwise, return the concatenation of "<code>&lt;!--</code>", <var>node</var>'s
-  <code><a>data</a></code>, and "<code>--></code>".
+    <li>Otherwise, return the concatenation of "<code>&lt;!--</code>", <var>node</var>'s
+      [=CharacterData/data=], and "<code>--></code>".
+  </ol>
 
 </section><!-- XML serializing a Comment node -->
 
@@ -1238,18 +1257,23 @@ dl.domintro::before {
   <code>document.createCDATASection</code> API, or as a result of parsing an <a>XML document</a>.
 </section><!-- XML serializing a CDATASection node -->
 
-<section><h2><dfn>XML serializing a Text node</dfn></h2>
+<section><h2>XML serializing a Text node</h2>
 
-  The algorithm for <a>producing an XML serialization of a DOM node</a> of type <a>Text</a> is as
-  follows:
+  <p>The algorithm for <dfn>XML serializing a Text node</dfn>, given
+    a {{Text}} |node:Text|,
+    a string |namespace:string|,
+    a [=namespace prefix map=] |prefix map:namespace prefix map|,
+    a mutable reference to an integer |prefix index:mutable reference to an integer|,
+    and
+    a boolean <var>require well-formed</var>,
+    must run the following steps:
 
   <ol>
-    <li>If the <a><var>require well-formed</var></a> flag is set (its value is <code>true</code>), and
-    <var>node</var>'s <code><a>data</a></code> contains characters that are not matched by the XML
-    <a>Char</a> production, then <a>throw an exception</a>; the serialization of this
-    <var>node</var>'s <code><a>data</a></code> would not be well-formed.
+    <li>Let <var>markup</var> be <var>node</var>'s [=CharacterData/data=].
 
-    <li>Let <var>markup</var> be the value of <var>node</var>'s <code><a>data</a></code>.
+    <li>If <var>require well-formed</var> is true, and <var>markup</var> contains characters that
+      are not matched by the XML <a>Char</a> production, then <a>throw an exception</a>.
+      <span class="note">The serialization of <var>node</var> would not be well-formed.</span>
 
     <li>Replace any occurrences of "<code>&amp;</code>" in <var>markup</var> by
     "<code>&amp;amp;</code>".
@@ -1260,92 +1284,117 @@ dl.domintro::before {
     <li>Replace any occurrences of "<code>&gt;</code>" in <var>markup</var> by
     "<code>&amp;gt;</code>".
 
-    <li>Return the value of <var>markup</var>.
+    <li>Return <var>markup</var>.
   </ol>
 
 </section><!-- XML serializing a Text node -->
 
-<section><h2><dfn>XML serializing a DocumentFragment node</dfn></h2>
+<section><h2>XML serializing a DocumentFragment node</h2>
 
-  The algorithm for <a>producing an XML serialization of a DOM node</a> of type
-  <a>DocumentFragment</a> is as follows:
+  <p>The algorithm for <dfn>XML serializing a DocumentFragment node</dfn>, given
+    a {{DocumentFragment}} |node:DocumentFragment|,
+    a string |namespace:string|,
+    a [=namespace prefix map=] |prefix map:namespace prefix map|,
+    a mutable reference to an integer |prefix index:mutable reference to an integer|,
+    and
+    a boolean <var>require well-formed</var>,
+    must run the following steps:
 
   <ol>
-    <li>Let <var>markup</var> the empty string.
+    <li>Let <var>markup</var> be the empty string.
 
-    <li>For each <a>child</a> <var>child</var> of <var>node</var>, in <a>tree order</a>, run the
-    <a>XML serialization algorithm</a> on the <var>child</var> given <a><var>namespace</var></a>,
-    <a><var>prefix map</var></a>, a reference to <a><var>prefix index</var></a>, and flag
-    <a><var>require well-formed</var></a>. Concatenate the result to <var>markup</var>.
+    <li>
+      <p>[=set/For each=] <var>child</var> of <var>node</var>'s [=tree/children=]:
+      <ol>
+        <li>Append to <var>markup</var> the result of running the
+          <a>XML serialization algorithm</a> on |child|, providing <var>inherited ns</var>,
+          <var>map</var>, <var>prefix index</var>, and <var>require well-formed</var>.
+      </ol>
 
-    <li>Return the value of <var>markup</var>.
+    <li>Return <var>markup</var>.
   </ol>
 
 </section><!-- XML serializing a DocumentFragment node -->
 
-<section><h2><dfn>XML serializing a DocumentType node</dfn></h2>
+<section><h2>XML serializing a DocumentType node</h2>
 
-  The algorithm for <a>producing an XML serialization of a DOM node</a> of type <a>DocumentType</a>
-  is as follows:
+  <p>The algorithm for <dfn>XML serializing a DocumentType node</dfn>, given
+    a {{DocumentType}} |node:DocumentType|,
+    a string |namespace:string|,
+    a [=namespace prefix map=] |prefix map:namespace prefix map|,
+    a mutable reference to an integer |prefix index:mutable reference to an integer|,
+    and
+    a boolean <var>require well-formed</var>,
+    must run the following steps:
 
   <ol>
-    <li>If the <a><var>require well-formed</var></a> flag is <code>true</code> and the <var>node</var>'s
-    <code><a>publicId</a></code> attribute contains characters that are not matched by the XML
-    <a>PubidChar</a> production, then <a>throw an exception</a>; the serialization of this
-    <var>node</var> would not be a well-formed document type declaration.
+    <li>If <var>require well-formed</var> is true, and <var>node</var>'s [=DocumentType/public ID=]
+      contains characters that are not matched by the XML <a>PubidChar</a> production, then
+      <a>throw an exception</a>.
+      <span class="note">The serialization of <var>node</var> would not be well-formed.</span>
 
-    <li>If the <a><var>require well-formed</var></a> flag is <code>true</code> and the <var>node</var>'s
-    <code><a>systemId</a></code> attribute contains characters that are not matched by the XML
-    <a>Char</a> production or that contains both a "<code>"</code>" (U+0022 QUOTATION MARK) and a
-    "<code>'</code>" (U+0027 APOSTROPHE), then <a>throw an exception</a>; the serialization of this
-    <var>node</var> would not be a well-formed document type declaration.
+    <li>If <var>require well-formed</var> is true, and <var>node</var>'s [=DocumentType/system ID=]
+      contains characters that are not matched by the XML <a>Char</a> production or that contains
+      both a "<code>"</code>" (U+0022 QUOTATION MARK) and a "<code>'</code>" (U+0027 APOSTROPHE),
+      then <a>throw an exception</a>.
+      <span class="note">The serialization of <var>node</var> would not be well-formed.</span>
 
-    <li>Let <var>markup</var> be an empty string.
+    <li>Let <var>markup</var> be the empty string.
 
     <li>Append the string "<code>&lt;!DOCTYPE</code>" to <var>markup</var>.
 
     <li>Append "<code> </code>" (U+0020 SPACE) to <var>markup</var>.
 
-    <li>Append the value of the <var>node</var>'s <code><a data-lt="doctype name">name</a></code>
-    attribute to <var>markup</var>. For a <var>node</var> belonging to an <a>HTML document</a>, the
-    value will be all lowercase.
+    <li>Append <var>node</var>'s [=DocumentType/name=] to <var>markup</var>.
+      <span class="note">For a <var>node</var> belonging to an <a>HTML document</a>, the
+      name will be all lowercase.</span>
 
-    <li>If the <var>node</var>'s <code><a>publicId</a></code> is not the empty string then append
-    the following, in the order listed, to <var>markup</var>:
-    <ol>
-      <li>"<code> </code>" (U+0020 SPACE);
+    <li>If <var>node</var>'s [=DocumentType/public ID=] is not the empty string, then append
+      the following, in the order listed, to <var>markup</var>:
+      <ol>
+        <li>"<code> </code>" (U+0020 SPACE);
 
-      <li>The string "<code>PUBLIC</code>";
+        <li>The string "<code>PUBLIC</code>";
 
-      <li>"<code> </code>" (U+0020 SPACE);
+        <li>"<code> </code>" (U+0020 SPACE);
 
-      <li>"<code>"</code>" (U+0022 QUOTATION MARK);
+        <li>"<code>"</code>" (U+0022 QUOTATION MARK);
 
-      <li>The value of the <var>node</var>'s <code><a>publicId</a></code> attribute;
+        <li><var>node</var>'s [=DocumentType/public ID=];
 
-      <li>"<code>"</code>" (U+0022 QUOTATION MARK).
-    </ol>
+        <li>"<code>"</code>" (U+0022 QUOTATION MARK).
+      </ol>
 
-    <li>If the <var>node</var>'s <code><a>systemId</a></code> is not the empty string and the
-    <var>node</var>'s <code><a>publicId</a></code> is set to the empty string, then append the
-    following, in the order listed, to <var>markup</var>:
-    <ol>
-      <li>"<code> </code>" (U+0020 SPACE);
+    <li>If <var>node</var>'s [=DocumentType/system ID=] is not the empty string and
+      <var>node</var>'s [=DocumentType/public ID=] is the empty string, then append the
+      following, in the order listed, to <var>markup</var>:
+      <ol>
+        <li>"<code> </code>" (U+0020 SPACE);
 
-      <li>The string "<code>SYSTEM</code>".
-    </ol>
+        <li>The string "<code>SYSTEM</code>".
+      </ol>
 
-    <li>If the <var>node</var>'s <code><a>systemId</a></code> is not the empty string then append
-    the following, in the order listed, to <var>markup</var>:
-    <ol>
-      <li>"<code> </code>" (U+0020 SPACE);
+    <li>If <var>node</var>'s [=DocumentType/system ID=] is not the empty string then append
+      the following, in the order listed, to <var>markup</var>:
+      <ol>
+        <li>"<code> </code>" (U+0020 SPACE);
 
-      <li>"<code>"</code>" (U+0022 QUOTATION MARK);
+        <li>"<code>"</code>" (U+0022 QUOTATION MARK);
 
-      <li>The value of the <var>node</var>'s <code><a>systemId</a></code> attribute;
+        <li><var>node</var>'s [=DocumentType/system ID=];
 
-      <li>"<code>"</code>" (U+0022 QUOTATION MARK).
-    </ol>
+        <li>"<code>"</code>" (U+0022 QUOTATION MARK).
+      </ol>
+      <div class="issue" data-number="71"></div>
+      <!--
+        Test: <!DOCTYPE a SYSTEM ''><a/>
+        Test: <!DOCTYPE a SYSTEM ""><a/>
+        Test: <!DOCTYPE a SYSTEM '"'><a/>
+        Test: <!DOCTYPE a SYSTEM '.'><a/>
+        Test: <!DOCTYPE a SYSTEM "'""><a/>
+        Test: <!DOCTYPE a SYSTEM ".""><a/>
+      -->
+
 
     <!-- Removing internalSubset serialization steps as this property is not supported by DOM4. Also,
          optional requirements don't help improve interoperability:
@@ -1367,43 +1416,49 @@ dl.domintro::before {
     -->
     <li>Append "<code>&gt;</code>" (U+003E GREATER-THAN SIGN) to <var>markup</var>.
 
-    <li>Return the value of <var>markup</var>.
+    <li>Return <var>markup</var>.
   </ol>
 
 </section><!-- XML serializing a DocumentType node -->
 
-<section><h2><dfn>XML serializing a ProcessingInstruction node</dfn></h2>
+<section><h2>XML serializing a ProcessingInstruction node</h2>
 
-  The algorithm for <a>producing an XML serialization of a DOM node</a> of type
-  <a>ProcessingInstruction</a> is as follows:
+  <p>The algorithm for <dfn>XML serializing a ProcessingInstruction node</dfn>, given
+    a {{ProcessingInstruction}} |node:ProcessingInstruction|,
+    a string |namespace:string|,
+    a [=namespace prefix map=] |prefix map:namespace prefix map|,
+    a mutable reference to an integer |prefix index:mutable reference to an integer|,
+    and
+    a boolean <var>require well-formed</var>,
+    must run the following steps:
 
   <ol>
-    <li>If the <a><var>require well-formed</var></a> flag is set (its value is <code>true</code>), and
-    <var>node</var>'s <code><a>target</a></code> contains a "<code>:</code>" (U+003A COLON)
-    character or is an <a>ASCII case-insensitive</a> match for the string "<code>xml</code>", then
-    <a>throw an exception</a>; the serialization of this <var>node</var>'s
-    <code><a>target</a></code> would not be well-formed.
+    <li>If <var>require well-formed</var> is true, and <var>node</var>'s
+      [=ProcessingInstruction/target=] contains a "<code>:</code>" (U+003A COLON)
+      character or is an <a>ASCII case-insensitive</a> match for the string "<code>xml</code>", then
+      <a>throw an exception</a>.
+      <span class="note">The serialization of <var>node</var> would not be well-formed.</span>
 
-    <li>If the <a><var>require well-formed</var></a> flag is set (its value is <code>true</code>), and
-    <var>node</var>'s <code><a>data</a></code> contains characters that are not matched by the XML
-    <a>Char</a> production or contains the string "<code>?></code>" (U+003F QUESTION MARK,
-    U+003E GREATER-THAN SIGN), then <a>throw an exception</a>; the serialization of this
-    <var>node</var>'s <code><a>data</a></code> would not be well-formed.
+    <li>If <var>require well-formed</var> is true, and <var>node</var>'s
+      [=CharacterData/data=] contains characters that are not matched by the XML <a>Char</a>
+      production or contains the string "<code>?></code>" (U+003F QUESTION MARK,
+      U+003E GREATER-THAN SIGN), then <a>throw an exception</a>.
+      <span class="note">The serialization of <var>node</var> would not be well-formed.</span>
 
     <li>Let <var>markup</var> be the concatenation of the following, in the order listed:
     <ol>
       <li>"<code>&lt;?</code>" (U+003C LESS-THAN SIGN, U+003F QUESTION MARK);
 
-      <li>The value of <var>node</var>'s <code><a>target</a></code>;
+      <li><var>node</var>'s [=ProcessingInstruction/target=]</code>;
 
       <li>"<code> </code>" (U+0020 SPACE);
 
-      <li>The value of <var>node</var>'s <code><a>data</a></code>;
+      <li><var>node</var>'s [=CharacterData/data=]</code>;
 
       <li>"<code>?></code>" (U+003F QUESTION MARK, U+003E GREATER-THAN SIGN).
     </ol>
 
-    <li>Return the value of <var>markup</var>.
+    <li>Return <var>markup</var>.
   </ol>
 
 </section><!-- XML serializing a ProcessingInstruction node -->
