@@ -59,7 +59,7 @@ dl.domintro::before {
   Report</a>.
 </section>
 
-<section id="conformance" class=introductory>
+<section id="conformance">
   <p>The IDL fragments in this specification must be interpreted as required for conforming IDL
   fragments, as described in the Web IDL specification. [[!WEBIDL]]
 
@@ -79,8 +79,6 @@ dl.domintro::before {
   invoke its internal API for that attribute or method so that e.g. the author can't change the
   behavior by overriding attributes or methods with custom properties or functions in ECMAScript.
   [[ECMA-262]]
-
-  <p>Unless otherwise stated, string comparisons are done in a <a>case-sensitive</a> manner.
 
   <p>If an algorithm calls into another algorithm, any exception that is thrown by the latter
   (unless it is explicitly caught), must cause the former to terminate, and the exception to be
@@ -174,11 +172,10 @@ dl.domintro::before {
        ┃
        ┗━ Text (data: "alert('hello world')")
   </pre>
-  An XML serialization must include the <code>HTMLScriptElement</code> <a>Node</a>'s
-  <a data-lt="concept namespace">namespace</a> in order to preserve the identity of the
-  <code>script</code> element, and to allow the serialized string to
+  An XML serialization must include the {{HTMLScriptElement}} [=Element/namespace=] in order to
+  preserve the identity of the [^script^] element, and to allow the serialized string to
   <a data-lt="round-tripping">round-trip</a> through an XML parser. Assuming that <code>root</code>
-  is in a variable named <code><var>root</var></code>:
+  is in a variable named <var>root</var>:
 
   <pre class=javascript>
     var xmlSerialization = new XMLSerializer().serializeToString(root);
@@ -186,9 +183,6 @@ dl.domintro::before {
     // "&lt;root>&lt;script xmlns="http://www.w3.org/1999/xhtml">alert('hello world')&lt;/script>&lt;/root>"
   </pre>
   </div>
-
-  <p>The term <dfn>context object</dfn> means the object on which the API being discussed was
-  called.
 
 </section><!-- end introduction -->
 
@@ -307,14 +301,14 @@ dl.domintro::before {
     might be dropped, substituted or changed. An HTML serialization does not attempt to
     preserve the <code>namespaceURI</code>.
 
-    <li><a>Elements</a> not in the <a>HTML namespace</a> containing no <a>children</a>, are
+    <li><a>Elements</a> not in the <a>HTML namespace</a> containing no [=tree/children=], are
     serialized using the <a>empty-element tag</a> syntax (i.e., according to the XML
     <a>EmptyElemTag</a> production).
   </ul>
 
   <p>Otherwise, the algorithm for producing an <a>XML serialization</a> is designed to produce a
   serialization that is compatible with the <a>HTML parser</a>. For example, elements in the
-  <a>HTML namespace</a> that contain no <a>child nodes</a> are serialized with an explicit begin and end
+  <a>HTML namespace</a> that contain no [=tree/children=] are serialized with an explicit begin and end
   tag rather than using the <a>empty-element tag</a> syntax.
 
   <div class="algorithm">
@@ -349,15 +343,6 @@ dl.domintro::before {
     algorithm, throw an {{"InvalidStateError"}} {{DOMException}}.
   </ol>
   </div>
-
-  <p>Each of the following algorithms for <dfn>producing an XML serialization of a DOM node</dfn>
-  take as input a <var>node</var> to serialize and the following arguments:
-  <ul>
-    <li>A namespace |namespace:namespace|
-    <li>A <a>namespace prefix map</a> <var>prefix map</var>
-    <li>A <a>generated namespace prefix index</a> <var>prefix index</var>
-    <li>The <a><var>require well-formed</var></a> flag
-  </ul>
 
   <div class="algorithm">
   <p>The <dfn>XML serialization algorithm</dfn>, given
@@ -1478,16 +1463,11 @@ dl.domintro::before {
   The HTML specification [[!HTML5]] defines the following terms used in this document:
 
   <ul>
-    <li>The general concepts:
-        an <dfn><a href="https://www.w3.org/TR/html5/single-page.html#active-document">active document</a></dfn>;
     <li>Parsing concepts:
-        the <dfn><a href="https://html.spec.whatwg.org/dynamic-markup-insertion.html#fragment-parsing-algorithm-steps">fragment parsing algorithm</a></dfn>;
         <dfn><a href="https://www.w3.org/TR/html5/single-page.html#html-parser">HTML parser</a></dfn>;
         <dfn><a href="https://www.w3.org/TR/html5/single-page.html#parsing-xhtml-documents">parsing XHTML documents</a></dfn>;
         <dfn><a href="https://www.w3.org/TR/html5/single-page.html#xml-parser">XML parser</a></dfn>;
-    <li>A document <dfn><a href="https://www.w3.org/TR/html5/single-page.html#location">location</a></dfn>
     <li>The [^template^]'s <dfn data-lt="template content"><a href="https://www.w3.org/TR/html5/single-page.html#template-contents">template contents</a></dfn>
-    <li>The <dfn data-lt="CEReactions"><a href="https://www.w3.org/TR/html5/single-page.html#cereactios">[CEReactions]</a></dfn> IDL <a>extended attribute</a>
     <li>The <dfn><a href="https://html.spec.whatwg.org/dynamic-markup-insertion.html#dom-element-innerhtml">innerHTML</a></dfn> property;
     <li>The <dfn><a href="https://html.spec.whatwg.org/dynamic-markup-insertion.html#dom-element-outerhtml">outerHTML</a></dfn> property;
     <li>The <dfn><a href="https://html.spec.whatwg.org/dynamic-markup-insertion.html#dom-element-insertadjacenthtml">insertAdjacentHTML</a></dfn> method;
@@ -1502,18 +1482,6 @@ dl.domintro::before {
         <dfn><a href="https://www.w3.org/TR/xml/#NT-Name"><code>Name</code></a></dfn> and
         <dfn><a href="https://www.w3.org/TR/xml/#NT-PubidChar"><code>PubidChar</code></a></dfn> productions
     <li><dfn><a href="https://www.w3.org/TR/xml/#dt-eetag">empty-element tag</a></dfn>
-  </ul>
-
-  The ECMAScript [[ECMA-262]] (commonly "JavaScript") specification defines these terms:
-
-  <ul>
-    <li>The <dfn><a href="https://tc39.github.io/ecma262/#sec-error-objects">TypeError</a></dfn> exception
-  </ul>
-
-  The Web IDL [[WebIDL]] specification defines:
-
-  <ul>
-    <li>The <dfn data-lt="LegacyNullToEmptyString"><a href="https://heycam.github.io/webidl/#LegacyNullToEmptyString">[LegacyNullToEmptyString]</a></dfn> IDL <a>extended attribute</a>
   </ul>
 </section>
 
