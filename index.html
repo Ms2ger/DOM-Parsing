@@ -896,8 +896,8 @@ dl.domintro::before {
 
   <div class="algorithm">
   <p>To <dfn data-lt="retrieving a preferred prefix string">retrieve a preferred prefix string</dfn>
-  <var>preferred prefix</var> from the <a>namespace prefix map</a> <var>map</var> given a namespace
-  <var>ns</var>:
+  <var>preferred prefix</var> (a string or null) from the <a>namespace prefix map</a> <var>map</var>
+  given a namespace <var>ns</var>:
 
   <p class="issue">Can <var>ns</var> be null?
 
@@ -908,12 +908,16 @@ dl.domintro::before {
 
     <li>[=Assert=]: <var>candidates</var> [=list/is not empty=].</li>
 
-    <li>[=list/For each=] <var>prefix</var> of <var>candidates</var>:
+    <li>
+      <p>If <var>prefix</var> is not null, then:
+      <ol>
+        <li>
+          <p>[=list/For each=] <var>prefix</var> of <var>candidates</var>:
 
-    <ol>
-      <li>If <var>prefix</var> is <var>preferred prefix</var>, return <var>prefix</var>.
-    </ol>
-
+          <ol>
+            <li>If <var>prefix</var> is <var>preferred prefix</var>, return <var>prefix</var>.
+          </ol>
+      </ol>
     <li>Return <var>candidates</var>[[=list/size=] of <var>candidates</var> - 1].
   </ol>
   </div>
