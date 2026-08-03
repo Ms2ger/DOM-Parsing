@@ -479,8 +479,8 @@ dl.domintro::before {
 
     <li>
       <p>Let <var>local default namespace</var> be the result of
-        <a>recording the namespace information</a> for <var>node</var> given <var>map</var> and
-        <var>local prefixes map</var>.
+        <a>recording the namespace information</a> for <var>node</var>'s [=Element/attribute list=]
+        given <var>map</var> and <var>local prefixes map</var>.
       <p class="note">The above step will update <var>map</var> with any found namespace prefix
         definitions, add the found prefix definitions to <var>local prefixes map</var> and
         return the value of a default namespace attribute if one exists.
@@ -788,16 +788,15 @@ dl.domintro::before {
     <var>local prefixes map</var>, and return a local default namespace value defined by a default
     namespace attribute if one exists. Otherwise it returns null.</p>
 
-  <p>When <dfn>recording the namespace information</dfn> for an {{Element}}
-  <var>element</var>, given a <a>namespace prefix map</a> <var>map</var> and an [=ordered map=]
-  <var>local prefixes map</var>, the user agent must run the following
-  steps:
+  <p>When <dfn>recording the namespace information</dfn> for a [=list=] of
+    <a data-cite="dom">attributes</a> |attributes|, given a <a>namespace prefix map</a>
+    <var>map</var> and an [=ordered map=] <var>local prefixes map</var>, the user agent must run
+    the following steps:
 
   <ol>
     <li>Let <var>default namespace attr value</var> be null.
 
-    <li>[=list/For each=] <a data-cite="dom">attribute</a> <var>attr</var> of <var>element</var>'s
-      [=Element/attribute list=]:
+    <li>[=list/For each=]  <var>attr</var> of <var>attributes</var>:
 
     <p class="note">The following conditional steps find namespace prefixes. Only attributes
     in the <a>XMLNS namespace</a> are considered (e.g., attributes made to look like namespace
