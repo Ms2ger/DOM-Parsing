@@ -400,6 +400,7 @@ dl.domintro::before {
 
 <section><h2>XML serializing an Element node</h2>
 
+  <div class="algorithm">
   <p>The algorithm for <dfn>XML serializing an Element node</dfn>, given
     an {{Element}} |node:Element|,
     a string |namespace:string|,
@@ -483,7 +484,7 @@ dl.domintro::before {
         given <var>map</var> and <var>local prefixes map</var>.
       <p class="note">The above step will update <var>map</var> with any found namespace prefix
         definitions, add the found prefix definitions to <var>local prefixes map</var> and
-        return the value of a default namespace attribute if one exists.
+        return the value of a default namespace attribute (which may be empty) if one exists.
         Otherwise it returns null.</p>
 
     <li>
@@ -780,6 +781,7 @@ dl.domintro::before {
 
     <li>Return <var>markup</var>.
   </ol>
+  </div>
 
 <section><h2>Recording the namespace</h2>
 
@@ -796,7 +798,7 @@ dl.domintro::before {
   <ol>
     <li>Let <var>default namespace attr value</var> be null.
 
-    <li>[=list/For each=]  <var>attr</var> of <var>attributes</var>:
+    <li>[=list/For each=] <var>attr</var> of <var>attributes</var>:
 
     <p class="note">The following conditional steps find namespace prefixes. Only attributes
     in the <a>XMLNS namespace</a> are considered (e.g., attributes made to look like namespace
@@ -902,7 +904,7 @@ dl.domintro::before {
   <p class="issue">Can <var>ns</var> be null?
 
   <ol>
-    <li>If <var>map</var> does not [=map/exist|contain=] <var>ns</var>, return null.
+    <li>If <var>map</var> does not [=map/contain=] <var>ns</var>, return null.
 
     <li>Let <var>candidates</var> be <var>map</var>[<var>ns</var>].
 
@@ -927,7 +929,7 @@ dl.domintro::before {
   <a>namespace prefix map</a> <var>map</var> given a namespace <var>ns</var>:
 
   <ol>
-    <li>If <var>map</var> does not [=map/exist|contain=] <var>ns</var>, return false.
+    <li>If <var>map</var> does not [=map/contain=] <var>ns</var>, return false.
 
     <li>Let <var>candidates</var> be <var>map</var>[<var>ns</var>].
 
@@ -941,7 +943,7 @@ dl.domintro::before {
 
   <ol>
     <li>
-      <p>If |map| does not [=map/exist|contain=] |ns|:
+      <p>If |map| does not [=map/contain=] |ns|:
       <ol>
         <li>Let |candidates| be « |prefix| ».
         <li>Set |map|[|ns|] to |candidates|.
@@ -1010,12 +1012,12 @@ dl.domintro::before {
           <ol>
             <li>Let |prefix| be <var>attr</var>'s [=Attr/namespace prefix=].
 
-            <li>Let <var>candidate prefix</var> be the result of
+            <li>Set <var>candidate prefix</var> to the result of
               <a>retrieving a preferred prefix string</a> |prefix| from <var>map</var> given
               <var>attribute namespace</var>.
 
             <li>
-              <p>If the value of <var>attribute namespace</var> is the <a>XMLNS namespace</a>, then:
+              <p>If <var>attribute namespace</var> is the <a>XMLNS namespace</a>, then:
               <ol>
                 <li>If any of the following are true, then [=iteration/continue=]:
                 <ul>
@@ -1033,10 +1035,10 @@ dl.domintro::before {
 
                   <li><var>prefix</var> is not null and either
                     <ul>
-                      <li><var>local prefixes map</var> does not [=map/exist|contain=]
+                      <li><var>local prefixes map</var> does not [=map/contain=]
                         <var>attr</var>'s [=Attr/local name=], or
 
-                      <li><var>local prefixes map</var> does [=map/exist|contain=]
+                      <li><var>local prefixes map</var> does [=map/contain=]
                         <var>attr</var>'s [=Attr/local name=], but
                         <var>local prefixes map</var>[<var>attr</var>'s [=Attr/local name=]] is not
                         <var>attr</var>'s [=Attr/value=]
@@ -1062,14 +1064,14 @@ dl.domintro::before {
                   <span class="note">Namespace prefix declarations cannot be used to undeclare a
                   namespace (use a default namespace declaration instead).</span>
 
-                <li>If <var>prefix</var> is "<code>xmlns</code>", then set <var>candidate prefix</var>
-                  to "<code>xmlns</code>".
+                <li>If <var>prefix</var> is "<code>xmlns</code>", then set
+                  <var>candidate prefix</var> to "<code>xmlns</code>".
               </ol>
 
             <li>
               <p>Otherwise (the <var>attribute namespace</var> is not the <a>XMLNS namespace</a>):
               <ol>
-                <li>Let <var>candidate prefix</var> be the result of <a>generating a prefix</a>
+                <li>Set <var>candidate prefix</var> to the result of <a>generating a prefix</a>
                   given <var>map</var>, <var>attribute namespace</var>, and <var>prefix index</var>.
 
                 <li>
